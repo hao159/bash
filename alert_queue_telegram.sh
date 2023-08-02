@@ -29,6 +29,16 @@ for key in "${!tubes[@]}"; do
 
 	stats=$({ echo "stats-tube $tube"; sleep 1;} | telnet $host $port)
 
+ 	if [[ "$stats" != *"OK"* && "$stats" != *"NOT_FOUND"* ]]; then
+		#got an error in connection
+		message2="[ 🔴 Warning - <code>${DATE_EXEC}</code>] <b>[Connection refused] in the:</b> <code>${host}:${port}</code> Please check Beanstalkd!"
+    		#send alert message to telegram
+   		#...
+    		curl -s --max-time $TIMEOUT -d "chat_id=$USERID&parse_mode=HTML&disable_web_page_preview=1&text=$message2" $URL > /dev/null
+      		# next loop
+		continue
+	fi
+
 	current_jobs_ready=$(echo "$stats" | awk '/current-jobs-ready:/ {print $2}')
 
 	if (( current_jobs_ready > threshold )); then
